@@ -13,4 +13,4 @@ This document outlines:
 ...
 
 ## 📬 Contact
-For enterprise Kafka setup in insurance or FinTech, contact: `your-team@example.com`
+For enterprise Kafka setup in insurance or FinTech, contact: `biju.tholath@outlook.com`
