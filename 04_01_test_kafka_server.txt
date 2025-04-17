@@ -1,0 +1,54 @@
+
+1) Check Kafka Broker Logs (Best for Instant Confirmation)
+If you started Kafka with:
+bin/kafka-server-start.sh config/kraft/server.properties
+
+
+1) check using netstat
+sudo apt update
+sudo apt install net-tools -y
+
+root@ubuntu-kafka:~# sudo netstat -tulnp | grep 9092
+tcp6       0      0 127.0.0.1:9092          :::*                    LISTEN      26233/java
+
+
+
+2) Use Kafka's native check
+root@ubuntu-kafka:~# cd ~/downloads/kafka
+bin/kafka-topics.sh --list --bootstrap-server localhost:9092
+__consumer_offsets
+demo-topic
+
+
+3) Use ss (modern replacement for netstat)
+sudo ss -ltnp | grep 9092
+-l → listening
+-t → TCP only
+-n → don't resolve service names
+-p → show process info
+
+Expected output if Kafka is running:
+root@ubuntu-kafka:~/downloads/kafka# sudo ss -ltnp | grep 9092
+LISTEN 0      50     [::ffff:127.0.0.1]:9092             *:*    users:(("java",pid=26233,fd=214))
+
+
+
+4) Check Kafka Process (ps)
+ps aux | grep kafka | grep -v grep
+
+
+Curl Check (Optional, only if advertised.listeners is accessible)
+From another machine (or your own laptop), if you opened port 9092, test with:
+nc -vz DROPLET_IP 9092
+
+nc -vz 146.190.130.199 9092
+
+
+Restart Kafka
+cd ~/downloads/kafka
+bin/kafka-server-stop.sh
+bin/kafka-server-start.sh config/kraft/server.properties
+
+
+Test Again
+bin/kafka-topics.sh --list --bootstrap-server localhost:9092

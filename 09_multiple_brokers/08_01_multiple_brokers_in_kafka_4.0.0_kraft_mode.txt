@@ -1,0 +1,140 @@
+Goal: Multiple Brokers in Kafka 4.0.0 (KRaft Mode)
+Each Kafka node (broker/controller) will run independently with:
+- A unique node.id
+- A shared controller.quorum.voters config so they can discover and elect a controller
+- Its own data/log directory
+
+
+🏗️ Architecture Example (3-Node Cluster)
+
+Node ID	    Role	            Hostname / IP	        Ports
+1	        Controller + Broker	node1:9092	            Controller: 9093
+2	        Broker	            node2:9092	            Controller: 9093
+3	        Broker	            node3:9092	            Controller: 9093
+
+🔧 Step-by-Step Setup for Each Node
+🟩 1. Assign a Unique node.id
+Each Kafka instance must have its own unique node ID:
+
+node.id=1  # (Change this for each node: 1, 2, 3, ...)
+
+🟩 2. Define Common Controller Quorum
+All nodes must agree on the controller quorum (static):
+controller.quorum.voters=1@node1:9093,2@node2:9093,3@node3:9093
+This tells each node which other nodes participate in leader election and metadata storage.
+
+🟩 3. Define Roles
+Usually, all nodes can have both roles for simplicity:
+
+process.roles=broker,controller
+You can also separate roles if needed (e.g., dedicated controller-only nodes).
+
+🟩 4. Set Listeners
+Set listeners and advertised.listeners per node:
+
+listeners=PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+advertised.listeners=PLAINTEXT://node1:9092  # Use actual IP or hostname
+controller.listener.names=CONTROLLER
+inter.broker.listener.name=PLAINTEXT
+
+🟩 5. Use a Unique Log Directory
+Each node must have its own storage directory:
+log.dirs=/tmp/kafka-logs-node1
+
+🟩 6. Format the Storage (Only Once Per Node)
+Use a shared cluster-id for all nodes:
+export CLUSTER_ID=$(bin/kafka-storage.sh random-uuid)
+Then format each node with its unique node.id and shared config:
+
+bin/kafka-storage.sh format -t $CLUSTER_ID -c config/kraft/server.properties
+
+✅ 7. Start Each Broker
+
+bin/kafka-server-start.sh config/kraft/server.properties
+Do this for all nodes — once they come online, they'll elect a controller and replicate metadata via the Raft protocol.
+
+🧠 Summary of Key Differences from ZooKeeper
+Feature	        ZooKeeper Mode	        KRaft Mode (Kafka 4.0+)
+Metadata store	ZooKeeper	            Built-in Raft log
+Unique ID	    broker.id	            node.id
+Coordination	ZooKeeper	            controller.quorum.voters
+Startup format	Not needed	            kafka-storage.sh format
+
+
+
+
+
+Here's a complete setup plan for deploying a 3-node Kafka 4.0.0 KRaft cluster across DigitalOcean droplets.
+
+🗂️ Folder Structure per Node (on each droplet)
+/opt/kafka-nodeX/
+├── bin/
+├── config/
+│   └── kraft/
+│       └── server.properties
+├── logs/
+└── data/
+
+📄 Example: server.properties for Each Node
+🔹 Common Settings (All nodes)
+Replace nodeX and IPs per node.
+
+process.roles=broker,controller
+node.id=X  # <- change per node (1, 2, 3)
+controller.listener.names=CONTROLLER
+inter.broker.listener.name=PLAINTEXT
+
+# Listener settings
+listeners=PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+advertised.listeners=PLAINTEXT://<NODE_X_PUBLIC_IP>:9092
+log.dirs=/opt/kafka-nodeX/data
+
+# Quorum config — SAME on all nodes
+controller.quorum.voters=1@NODE1_PUBLIC_IP:9093,2@NODE2_PUBLIC_IP:9093,3@NODE3_PUBLIC_IP:9093
+
+🛠️ Set Up Per Node (DigitalOcean Droplet)
+Download Kafka 4.0.0
+
+cd /opt
+wget https://downloads.apache.org/kafka/4.0.0/kafka_2.13-4.0.0.tgz
+tar -xvzf kafka_2.13-4.0.0.tgz
+mv kafka_2.13-4.0.0 kafka-nodeX
+
+Create directories:
+mkdir -p /opt/kafka-nodeX/data /opt/kafka-nodeX/logs
+
+Edit the KRaft config:
+nano /opt/kafka-nodeX/config/kraft/server.properties
+Set node.id=X and update IPs.
+
+📦 One-Time Setup: Generate and Share Cluster ID
+Do this on one node only:
+cd /opt/kafka-node1
+export CLUSTER_ID=$(bin/kafka-storage.sh random-uuid)
+echo $CLUSTER_ID
+
+Copy the $CLUSTER_ID value, and format storage on each node using:
+bin/kafka-storage.sh format -t $CLUSTER_ID -c config/kraft/server.properties
+
+🚀 Start Kafka (on each node)
+bin/kafka-server-start.sh config/kraft/server.properties
+
+🔁 Startup Script Example (Per Node)
+Create /opt/kafka-nodeX/start.sh:
+#!/bin/bash
+cd /opt/kafka-nodeX
+nohup bin/kafka-server-start.sh config/kraft/server.properties > logs/kafka.log 2>&1 &
+
+Make it executable:
+chmod +x /opt/kafka-nodeX/start.sh
+
+📡 Open Ports on Each Droplet
+sudo ufw allow 9092/tcp
+sudo ufw allow 9093/tcp
+Or configure DigitalOcean firewall to allow 9092 & 9093 between the 3 nodes and your client machine.
+
+🧪 Validate Cluster
+Run this on any node:
+bin/kafka-topics.sh --bootstrap-server <node-ip>:9092 --list
+
+You should be able to create topics, produce, and consume as normal.

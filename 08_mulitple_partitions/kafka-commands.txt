@@ -1,0 +1,107 @@
+✅ Summary of Use Cases
+Task	                                Use This Command
+Start Kafka cluster	                    ZooKeeper + Broker start commands (for versions < 3.5)
+Create & inspect topics	                --create, --describe, --list
+Test messaging (CLI)	                Console producer/consumer commands
+Read from specific partition/offset	    Console consumer with --partition and --offset
+Monitor consumers	                    Consumer group commands (--list, --describe)
+
+🟢 Start Kafka Services
+Category: Start ZooKeeper
+Command: bin/zookeeper-server-start.sh config/zookeeper.properties
+Purpose: Starts ZooKeeper service
+Why it's used: Required by Kafka (pre-3.5) to manage brokers and perform leader election
+Expected Outcome: ZooKeeper listens on default port 2181
+
+Category: Start Kafka Broker
+Command: bin/kafka-server-start.sh config/server.properties
+Purpose: Starts Kafka broker
+Why it's used: Handles message queues, topic partitions, and broker coordination
+Expected Outcome: Kafka broker starts and listens on port 9092
+
+
+
+📦 Topic Management
+Category: Create Topic
+Command:
+    bin/kafka-topics.sh --bootstrap-server localhost:9092 \
+    --create --replication-factor 1 --partitions 3 --topic animals
+Purpose: Creates a topic named animals
+Why it's used: Prepares Kafka to accept messages for a new logical stream
+Expected Outcome: New topic animals is created with 3 partitions and 1 replica
+
+Category: List Topics
+Command: bin/kafka-topics.sh --bootstrap-server localhost:9092 --list
+Purpose: Lists all topics
+Why it's used: To view what topics exist in the cluster
+Expected Outcome: Displays a list of topic names
+
+Category: Describe Topic
+Command: bin/kafka-topics.sh --bootstrap-server localhost:9092 --describe --topic animals
+Purpose: View metadata for topic animals
+Why it's used: See leader, replicas, and ISR for each partition
+Expected Outcome: Partition and replica layout is displayed
+
+📝 Produce Messages
+Category: Console Producer
+Command: bin/kafka-console-producer.sh --broker-list localhost:9092 --topic animals
+Purpose: Sends messages from terminal input
+Why it's used: Useful for testing and debugging
+Expected Outcome: Messages typed in terminal are sent to the topic animals
+
+
+📥 Consume Messages
+Category: Basic Consumer
+Command: bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic test
+Purpose: Starts consumer for topic test
+Why it's used: To view live incoming messages
+Expected Outcome: Displays messages from topic test
+
+Category: From Beginning
+Command:
+    bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 \
+    --topic animals --from-beginning
+Purpose: Reads all historical messages
+Why it's used: Replay messages for testing or debug
+Expected Outcome: Streams messages from the beginning of topic animals
+
+Category: Specific Partition
+Command:
+    bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 \
+    --partition 2 --topic animals --from-beginning
+Purpose: Consume from a specific partition
+Why it's used: For fine-grained testing or troubleshooting partition assignment
+Expected Outcome: Messages from partition 2 of topic animals are displayed
+
+Category: Specific Offset from Partition
+Command:
+    bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 \
+    --partition 2 --topic animals --offset 0
+Purpose: Read from a given offset in a partition
+Why it's used: To precisely inspect or reprocess data
+Expected Outcome: Starts reading from offset 0 in partition 2
+
+Category: With Consumer Group
+Command:
+    bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 \
+    --topic test --group test --from-beginning
+Purpose: Associates consumer with group test
+Why it's used: Enables offset tracking and load balancing
+Expected Outcome: Starts reading as part of group test from beginning
+
+
+👥 Consumer Group Monitoring
+Category: List Consumer Groups
+Command: bin/kafka-consumer-groups.sh --bootstrap-server localhost:9092 --list
+Purpose: Lists all consumer groups
+Why it's used: To check what consumers are active
+Expected Outcome: Displays group names
+
+Category: Describe Consumer Group
+Command:
+    bin/kafka-consumer-groups.sh --bootstrap-server localhost:9092 \
+    --group test --describe
+Purpose: View partition assignment, offsets, and lag for group test
+Why it's used: To monitor consumer progress and troubleshoot issues
+Expected Outcome: Shows group test offsets and lag info per partition
+

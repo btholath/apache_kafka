@@ -1,0 +1,79 @@
+✅ Summary of Use Cases
+
+Task	                        Use This Command
+Start Kafka cluster	            Start ZooKeeper and all Kafka brokers
+Inspect brokers via ZooKeeper	Use ZooKeeper shell commands to query /brokers/ids
+Create/manage topics	        Use kafka-topics.sh with multi-broker --bootstrap-server
+Produce & consume messages	    Use console producer/consumer
+
+
+🟢 Start Kafka Services
+Category: Start ZooKeeper
+Command:
+    bin/zookeeper-server-start.sh config/zookeeper.properties
+Purpose: Launches the ZooKeeper coordination service
+Why it's used: Required for Kafka cluster management (pre-KRaft mode)
+Expected Outcome: ZooKeeper runs on port 2181, ready to support Kafka brokers
+
+Category: Start Kafka Brokers
+Command(s):
+    bin/kafka-server-start.sh config/server0.properties
+    bin/kafka-server-start.sh config/server1.properties
+    bin/kafka-server-start.sh config/server2.properties
+Purpose: Launches Kafka broker instances with different configs
+Why it's used: To form a Kafka cluster (multi-broker, fault-tolerant setup)
+Expected Outcome: Each broker starts on its own port (e.g., 9092, 9093, 9094)
+
+🔍 ZooKeeper Broker Info
+Category: Get Broker IDs
+Command: bin/zookeeper-shell.sh localhost:2181 ls /brokers/ids
+Purpose: Lists all currently registered brokers in the cluster
+Why it's used: Verifies which brokers are active
+Expected Outcome: Outputs list like [0, 1, 2]
+
+Category: Get Broker Metadata by ID
+Command: bin/zookeeper-shell.sh localhost:2181 get /brokers/ids/0
+Purpose: Shows metadata (host, port, version) for broker ID 0
+Why it's used: To inspect broker config, status, and address
+Expected Outcome: JSON with broker address and listener info
+
+📦 Topic Management
+Category: Create Topic
+Command:
+bin/kafka-topics.sh --bootstrap-server localhost:9092,localhost:9093,localhost:9094 \
+--create --replication-factor 3 --partitions 5 --topic animals
+Purpose: Creates topic animals with 5 partitions and 3 replicas
+Why it's used: Enables high availability and horizontal scaling
+Expected Outcome: Topic created across all brokers in the cluster
+
+Category: List Topics
+Command: bin/kafka-topics.sh --bootstrap-server localhost:9092,localhost:9093,localhost:9094 --list
+Purpose: Lists all topics available in the Kafka cluster
+Expected Outcome: Displays names like animals, cars, etc.
+
+Category: Describe Topic
+Command: bin/kafka-topics.sh --bootstrap-server localhost:9092,localhost:9093,localhost:9094 --describe --topic cars
+Purpose: Retrieves metadata for topic cars
+Why it's used: To inspect partition assignments and leader brokers
+Expected Outcome: Detailed info about partitions, leaders, replicas
+
+📝 Produce Messages
+Category: Console Producer
+Command: bin/kafka-console-producer.sh --broker-list localhost:9092,localhost:9093,localhost:9094 --topic cars
+Purpose: Launches an interactive CLI to send messages
+Why it's used: Quick manual message testing
+Expected Outcome: Messages typed are pushed to topic cars
+
+📥 Consume Messages
+Category: Basic Consumer
+Command: bin/kafka-console-consumer.sh --bootstrap-server localhost:9092,localhost:9093,localhost:9094 --topic cars
+Purpose: Reads new messages from topic cars
+Expected Outcome: Prints messages received after the consumer starts
+
+Category: From Beginning
+Command:
+bin/kafka-console-consumer.sh --bootstrap-server localhost:9092,localhost:9093,localhost:9094 \
+--topic test-topic --from-beginning
+Purpose: Reads all existing messages from test-topic
+Why it's used: Replay or test previously published data
+Expected Outcome: Streams every message since offset 0

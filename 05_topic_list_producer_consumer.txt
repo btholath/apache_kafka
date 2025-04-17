@@ -1,0 +1,26 @@
+cd ~/downloads/kafka
+
+Kafka server(broker) is running on localhost:9092
+
+
+🔹 1. Create a Kafka Topic
+bin/kafka-topics.sh --create --topic demo-topic --bootstrap-server localhost:9092 --partitions 1 --replication-factor 1
+
+
+🔹 2. List Topics
+bin/kafka-topics.sh --list --bootstrap-server localhost:9092
+bin/kafka-topics.sh --describe --bootstrap-server localhost:9092 --topic demo-topic
+
+🔹 3. Send a Message (Producer)
+bin/kafka-console-producer.sh --topic demo-topic --bootstrap-server localhost:9092
+Type a few messages and hit Enter after each.
+
+🔹 4. Read Messages (Consumer)
+Open a second terminal and run:
+
+bin/kafka-console-consumer.sh --topic demo-topic --from-beginning --bootstrap-server localhost:9092
+
+You’ll see the messages appear in real time.
+
+
+

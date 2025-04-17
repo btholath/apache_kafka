@@ -1,0 +1,16 @@
+🔧 Step-by-Step:
+🔹 1. Edit Kafka’s environment config:
+
+nano bin/kafka-server-start.sh
+Look for a line like this (around line 40–50):
+
+export KAFKA_HEAP_OPTS="-Xmx1G -Xms1G"
+Change it to:
+export KAFKA_HEAP_OPTS="-Xmx512M -Xms256M"
+
+Or even:
+export KAFKA_HEAP_OPTS="-Xmx256M -Xms128M"
+💡 -Xms = initial heap, -Xmx = max heap.
+
+🔁 2. Save and restart Kafka:
+bin/kafka-server-start.sh config/kraft/server.properties

@@ -1,0 +1,97 @@
+Here is the updated and organized command set — focused on Kafka 4.0.0 with KRaft mode, featuring multiple brokers, replication, and partition-specific consumers — without ZooKeeper, which is no longer supported in Kafka 4.0.
+
+✅ Summary of Use Cases
+Task	                                Use This Command
+Start multi-broker Kafka (4.0+)	        Run multiple kafka-server-start.sh with unique node.id and ports
+Create topic with replication	        --create --replication-factor 3 --partitions 7
+Produce/consume messages	            Use console producer/consumer with multi-node bootstrap server
+Consume from partition/offset	        Add --partition and --offset to kafka-console-consumer.sh
+
+
+🏗️ Kafka 4.0.0 – Multi-Broker KRaft Setup (No ZooKeeper)
+👥 Brokers Configuration
+Each broker has:
+Unique node.id
+Same controller.quorum.voters
+Different ports/log dirs
+
+Example: server-1.properties
+node.id=1
+process.roles=broker,controller
+listeners=PLAINTEXT://localhost:9092,CONTROLLER://localhost:9093
+advertised.listeners=PLAINTEXT://localhost:9092
+controller.listener.names=CONTROLLER
+inter.broker.listener.name=PLAINTEXT
+controller.quorum.voters=1@localhost:9093,2@localhost:9193,3@localhost:9293
+log.dirs=/tmp/kraft-logs-1
+Repeat for brokers 2 and 3 with node.id 2/3, ports 9192/9292, and unique log dirs.
+
+🛠️ One-Time Format for Each Broker
+Generate once:
+export CLUSTER_ID=$(bin/kafka-storage.sh random-uuid)
+Then format each node:
+bin/kafka-storage.sh format -t $CLUSTER_ID -c config/kraft/server-1.properties
+Repeat for server-2.properties and server-3.properties.
+
+🚀 Start Kafka Brokers
+bin/kafka-server-start.sh config/kraft/server-1.properties &
+bin/kafka-server-start.sh config/kraft/server-2.properties &
+bin/kafka-server-start.sh config/kraft/server-3.properties &
+
+📦 Topic Management
+Create Topic with Replication
+bin/kafka-topics.sh \
+--bootstrap-server localhost:9092,localhost:9192,localhost:9292 \
+--create \
+--replication-factor 3 \
+--partitions 7 \
+--topic months
+
+List Topics
+bin/kafka-topics.sh \
+--bootstrap-server localhost:9092,localhost:9192,localhost:9292 \
+--list
+
+Describe Topic
+bin/kafka-topics.sh \
+--bootstrap-server localhost:9092,localhost:9192,localhost:9292 \
+--describe \
+--topic months
+📝 Produce Messages
+
+Start Console Producer
+bin/kafka-console-producer.sh \
+--broker-list localhost:9092,localhost:9192,localhost:9292 \
+--topic months
+
+📥 Consume Messages
+Basic Consumer
+bin/kafka-console-consumer.sh \
+--bootstrap-server localhost:9092,localhost:9192,localhost:9292 \
+--topic months
+
+From Beginning
+bin/kafka-console-consumer.sh \
+--bootstrap-server localhost:9092,localhost:9192,localhost:9292 \
+--topic months \
+--from-beginning
+
+From Specific Partition
+bin/kafka-console-consumer.sh \
+--bootstrap-server localhost:9092,localhost:9192,localhost:9292 \
+--topic months \
+--partition 6 \
+--from-beginning
+
+From Specific Partition and Offset
+bin/kafka-console-consumer.sh \
+--bootstrap-server localhost:9092,localhost:9192,localhost:9292 \
+--topic months \
+--partition 3 \
+--offset 2
+
+🧠 Notes
+Kafka 4.0 uses KRaft mode only, so no zookeeper-server-start.sh or zookeeper-shell.sh.
+
+Broker and controller coordination happens via controller.quorum.voters.
+Use distinct node.id, PORTs, and log.dirs for each broker.

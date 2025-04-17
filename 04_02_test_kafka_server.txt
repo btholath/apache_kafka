@@ -1,0 +1,13 @@
+
+🎉 Success! Your Apache Kafka 4.0 broker is now fully up and running in KRaft mode (ZooKeeper-free). The logs confirm that:
+
+The broker has successfully transitioned from STARTING → RECOVERY → RUNNING → STARTED.
+
+Listeners are active on:
+    localhost:9092 (PLAINTEXT for Kafka clients)
+    localhost:9093 (CONTROLLER listener for internal KRaft coordination)
+
+Kafka has registered and initialized internal components like group coordinator, transaction coordinator,
+log cleaner, etc.
+
+It's using log.dirs = /tmp/kraft-combined-logs, confirming your KRaft setup.

@@ -1,0 +1,44 @@
+# ------------------------
+# Monitoring with Prometheus and JMX Exporter (Setup Notes)
+# ------------------------
+
+# To integrate with Prometheus, use Kafka's JMX metrics:
+# 1. Download and configure Prometheus JMX Exporter (https://github.com/prometheus/jmx_exporter)
+# 2. Add this to your Kafka startup:
+#    KAFKA_JMX_OPTS="-javaagent:/path/to/jmx_prometheus_javaagent.jar=7071:/path/to/kafka-2_0_0.yml"
+# 3. Restart brokers with updated env var
+# 4. Configure Prometheus to scrape the JMX port (e.g., 7071)
+
+# Sample JMX Exporter YAML (kafka-2_0_0.yml):
+---
+startDelaySeconds: 0
+jmxUrl: ""
+lowercaseOutputName: true
+lowercaseOutputLabelNames: true
+whitelistObjectNames:
+  - kafka.server:type=BrokerTopicMetrics,name=*
+  - kafka.server:type=KafkaRequestHandlerPool,name=RequestHandlerAvgIdlePercent
+  - java.lang:type=Memory
+  - java.lang:type=GarbageCollector,name=*
+  - java.lang:type=Threading
+  - kafka.network:type=RequestMetrics,name=RequestsPerSec,request=*
+  - kafka.controller:type=KafkaController,name=ActiveControllerCount
+  - kafka.controller:type=ControllerStats,name=LeaderElectionRateAndTimeMs
+
+# Sample Prometheus scrape config:
+scrape_configs:
+  - job_name: 'kafka'
+    static_configs:
+      - targets: ['localhost:7071']
+
+# To test Kafka with JMeter:
+# - Use the Kafka Load Generator Plugin for Apache JMeter
+# - Configure producer/consumer threads to simulate load
+# - Collect and export metrics to dashboards
+
+# For Grafana integration:
+# - Use Prometheus as a data source
+# - Import Kafka dashboards from Grafana Labs or build custom panels
+
+# Metrics Pipeline Overview:
+# Kafka JVM (JMX) --> JMX Exporter (Java Agent) --> Prometheus (scrapes metrics) --> Grafana (visualizes)

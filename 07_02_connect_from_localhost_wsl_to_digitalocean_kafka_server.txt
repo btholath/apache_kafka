@@ -1,0 +1,59 @@
+Reconfigure Kafka to Bind to All Network Interfaces
+
+In DigitalOcean's create a Firewall Inbound rule and attach it to the Droplet.
+Custom	TCP	9092	All IPv4
+
+
+Open Port 9092 on DigitalOcean Droplet
+If using UFW:
+sudo ufw allow 9092/tcp
+Also check DigitalOcean's cloud firewall in your dashboard:
+Allow inbound on port 9092
+
+From:
+Your WSL host IP (if known) or
+0.0.0.0/0 for temporary open access (for testing only)
+
+
+🔧 Step 1: Edit Kafka Server Config
+nano ~/downloads/kafka/config/kraft/server.properties
+Find or add these two lines:
+
+# Listen on all interfaces
+listeners=PLAINTEXT://0.0.0.0:9092
+
+# Advertise the droplet’s public IP to clients
+advertised.listeners=PLAINTEXT://146.190.130.199:9092
+🧠 Explanation:
+
+listeners tells Kafka where to bind
+advertised.listeners tells clients what address to connect to
+
+🔁 Step 2: Restart Kafka
+cd ~/downloads/kafka
+bin/kafka-server-stop.sh
+sleep 3
+bin/kafka-server-start.sh config/kraft/server.properties
+You can also use Ctrl+C if it was started in the foreground.
+
+✅ Step 3: Verify It’s Listening on the Public Interface
+ss -ltnp | grep 9092
+Expected output:
+LISTEN 0 50 0.0.0.0:9092 ...
+
+Or:
+
+LISTEN 0 50 [::]:9092 ...
+
+📡 Step 4: Confirm Remote Connectivity from WSL
+Back in your WSL terminal, run:
+
+nc -vz 146.190.130.199 9092
+If successful:
+Connection to 146.190.130.199 9092 port [tcp/*] succeeded!
+
+🎯 Step 5: Rerun Python Kafka Producer
+If you're using the following Python config:
+
+KafkaProducer(bootstrap_servers='146.190.130.199:9092')
+It should now connect and send messages successfully!

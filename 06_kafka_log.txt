@@ -1,0 +1,2 @@
+root@ubuntu-kafka:~/downloads/kafka# ls -lrt /tmp/kraft-combined-logs/
+

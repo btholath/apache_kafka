@@ -1,0 +1,85 @@
+Summary of Use Cases
+Task	                    Use This Command
+Start Kafka cluster	        ZooKeeper + Broker start commands (for versions < 3.5)
+Create & inspect            topics	--create, --describe, --list
+Test messaging (CLI)	    Console producer/consumer commands
+Monitor consumers	        Consumer group commands (--list, --describe)
+
+
+🟢 Start Kafka Services
+Category: Start ZooKeeper
+Command: bin/zookeeper-server-start.sh config/zookeeper.properties
+Purpose: Starts ZooKeeper service
+Why it's used: Kafka (pre-3.5) relies on ZooKeeper for cluster metadata & leader election
+Expected Outcome: ZooKeeper runs and listens (default: 2181)
+
+Category: Start Kafka Broker
+Command: bin/kafka-server-start.sh config/kraft/server.properties
+Purpose: Starts Kafka broker node
+Why it's used: Enables message processing, topic management, and cluster coordination
+Expected Outcome: Kafka broker starts and listens (default: 9092)
+
+
+📦 Topic Management
+Category: Create Topic
+Command: bin/kafka-topics.sh --bootstrap-server localhost:9092 --create --replication-factor 1 --partitions 3 --topic test
+Purpose: Creates a new topic named test
+Why it's used: Topics are needed to send/receive messages; replication/partitioning boosts reliability & performance
+Expected Outcome: New topic test with 3 partitions and 1 replica is created
+
+Category: List Topics
+Command: bin/kafka-topics.sh --bootstrap-server localhost:9092 --list
+Purpose: Lists all existing Kafka topics
+Why it's used: To view available message queues in the cluster
+Expected Outcome: Displays a list of topic names
+
+Category: Describe Topic
+Command: bin/kafka-topics.sh --bootstrap-server localhost:9092 --describe --topic test
+Purpose: Shows details of a specific topic
+Why it's used: Useful for checking partition layout, leader, and replicas
+Expected Outcome: Displays partition count, leader broker, ISR list, etc.
+
+
+📝 Produce Messages
+Category: Console Producer
+Command: bin/kafka-console-producer.sh --broker-list localhost:9092 --topic test
+Purpose:  Starts a CLI tool to send messages to a topic
+Why it's used: Useful for testing or manually producing messages
+Expected Outcome: CLI prompt to input messages sent to topic test
+
+
+📥 Consume Messages
+
+Category: Basic Consumer
+Command: bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic test
+Purpose: Starts a CLI consumer to read messages
+Why it's used: To see real-time messages from the topic
+Expected Outcome: Streams messages from test topic
+
+Category: From Beginning
+Command: bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic test --from-beginning
+Purpose: Reads all historical messages from the beginning
+Why it's used: Useful for debugging or replaying topic data
+Expected Outcome: Streams all existing messages from offset 0
+
+Category: With Group
+Command: bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic test --group test --from-beginning
+Purpose: Starts a consumer as part of a specific group
+Why it's used: Enables tracking offsets & sharing load among consumers
+Expected Outcome: Begins consuming messages as group test (tracked offsets)
+
+
+👥 Consumer Group Monitoring
+
+Category: List Groups
+Command: bin/kafka-consumer-groups.sh --bootstrap-server localhost:9092 --list
+Purpose: Lists all consumer groups
+Why it's used: Helps identify active or lagging consumer apps
+Expected Outcome: Displays group names
+
+Category: Group Details
+Command: bin/kafka-consumer-groups.sh --bootstrap-server localhost:9092 --group test --describe
+Purpose: Shows offsets, lags, and partition assignments for a group
+Why it's used: Used to monitor consumption progress and diagnose lag
+Expected Outcome: Shows current offsets, lag, and owners for group test
+
